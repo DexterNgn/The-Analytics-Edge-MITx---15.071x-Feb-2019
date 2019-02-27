@@ -50,3 +50,65 @@ wins2012 = c(94,88,95,88,93,94,98,97,93,94)
 wins2013 = c(97,97,92,93,92,96,94,96,92,90)
 cor(teamRank, wins2012)
 cor(teamRank, wins2013)
+
+#Recitation 2: Playing baseball in the NBA
+#Read NBA file
+NBA = read.csv("NBA_train.csv")
+str(NBA)
+
+#Check the Playoff number using table function
+table(NBA$W, NBA$Playoffs)
+
+#Calculate the Diff
+NBA$PTSdiff = NBA$PTS - NBA$oppPTS
+
+#Plot the diff with the Win
+plot(NBA$PTSdiff, NBA$Win)
+
+#Build a regression model
+WinsReg = lm(W ~ PTSdiff, data = NBA)
+summary(WinsReg)
+
+#build a regression model of Points
+PointsReg = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + DRB + TOV + STL + BLK, data= NBA)
+summary(PointsReg)
+
+#Calculate the residuals, SSE, SST, SSR
+PointsReg$residuals
+SSE = sum(PointsReg$residuals^2)
+SSE
+RMSE = sqrt(SSE/nrow(NBA))
+RMSE
+mean(NBA$PTS)
+
+#Improve the model by removing some insignificant independent variables
+PointsReg2 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + DRB + STL + BLK, data= NBA)
+summary(PointsReg2)
+PointsReg3 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + STL + BLK, data= NBA)
+summary(PointsReg3)
+PointsReg4 = lm(PTS ~ X2PA + X3PA + FTA + AST + ORB + STL, data= NBA)
+summary(PointsReg4)
+
+#Recheck residuals, SSE, SST, SSR
+SSE_4 = sum(PointsReg4$residuals^2)
+SSE_4
+RMSE_4 = sqrt(SSE_4/nrow(NBA))
+RMSE_4
+RMSE
+
+#Make prediction  by first reading test data
+NBA_test = read.csv("NBA_test.csv")
+summary(NBA_test)
+str(NBA_test)
+
+#Bulld prediction model
+PointsPredictions = predict(PointsReg4, newdata=NBA_test)
+
+#Measure the prediction goodness of fit, need to calculate the sample R-squared
+SSE = sum((PointsPredictions - NBA_test$PTS)^2)
+SSE
+SST = sum((mean(NBA$PTS)- NBA_test$PTS)^2)
+R2 = 1 - SSE/SST
+R2
+RMSE = sqrt(SSE/nrow(NBA_test))
+RMSE
